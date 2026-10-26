@@ -1,0 +1,88 @@
+{
+  "info": {
+    "name": "Microservicio Biblioteca",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "libroId",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Listar libros",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/libros"
+      }
+    },
+    {
+      "name": "Crear libro",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const respuesta = pm.response.json();",
+              "pm.collectionVariables.set('libroId', respuesta.id);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"titulo\": \"Cien años de soledad\",\n  \"autor\": \"Gabriel García Márquez\",\n  \"anioPublicacion\": 1967,\n  \"genero\": \"Novela\"\n}"
+        },
+        "url": "{{baseUrl}}/api/libros"
+      }
+    },
+    {
+      "name": "Buscar libro por ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/libros/{{libroId}}"
+      }
+    },
+    {
+      "name": "Actualizar libro",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"titulo\": \"Cien años de soledad - Edición revisada\",\n  \"autor\": \"Gabriel García Márquez\",\n  \"anioPublicacion\": 1967,\n  \"genero\": \"Realismo mágico\"\n}"
+        },
+        "url": "{{baseUrl}}/api/libros/{{libroId}}"
+      }
+    },
+    {
+      "name": "Eliminar libro",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/libros/{{libroId}}"
+      }
+    }
+  ]
+}

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import cl.duoc.biblioteca.usuario.dto.UsuarioRequest;
 import cl.duoc.biblioteca.usuario.dto.UsuarioResponse;
+import cl.duoc.biblioteca.exception.ConflictException;
 import cl.duoc.biblioteca.usuario.model.Rol;
 import cl.duoc.biblioteca.usuario.model.Usuario;
 import cl.duoc.biblioteca.usuario.repository.UsuarioRepository;
@@ -41,7 +42,7 @@ public class UsuarioService {
 
     private UsuarioResponse crear(UsuarioRequest request, boolean permitirRol) {
         if (usuarioRepository.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("El email ya está registrado");
+            throw new ConflictException("El email ya está registrado");
         }
         Usuario usuario = new Usuario();
         usuario.setNombre(request.nombre());
@@ -52,6 +53,9 @@ public class UsuarioService {
     }
 
     public Optional<UsuarioResponse> actualizar(Long id, UsuarioRequest request) {
+        if (usuarioRepository.existsByEmailAndIdNot(request.email(), id)) {
+            throw new ConflictException("El email ya está registrado");
+        }
         return usuarioRepository.findById(id).map(usuario -> {
             usuario.setNombre(request.nombre());
             usuario.setEmail(request.email());

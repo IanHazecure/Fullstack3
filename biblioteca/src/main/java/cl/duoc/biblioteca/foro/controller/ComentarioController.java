@@ -19,6 +19,7 @@ import cl.duoc.biblioteca.foro.dto.ComentarioRequest;
 import cl.duoc.biblioteca.foro.dto.ComentarioResponse;
 import cl.duoc.biblioteca.foro.service.ComentarioService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 
 @Validated
 @RestController
@@ -32,18 +33,21 @@ public class ComentarioController {
     }
 
     @GetMapping("/temas/{temaId}/comentarios")
-    public List<ComentarioResponse> listarPorTema(@PathVariable Long temaId) {
+        public List<ComentarioResponse> listarPorTema(
+            @PathVariable @Positive(message = "El id del tema debe ser positivo") Long temaId) {
         return comentarioService.listarPorTema(temaId);
     }
 
     @PostMapping("/temas/{temaId}/comentarios")
-    public ResponseEntity<ComentarioResponse> crear(@PathVariable Long temaId,
+        public ResponseEntity<ComentarioResponse> crear(
+            @PathVariable @Positive(message = "El id del tema debe ser positivo") Long temaId,
             @Valid @RequestBody ComentarioRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(comentarioService.crear(temaId, request));
     }
 
     @PutMapping("/comentarios/{id}")
-    public ResponseEntity<ComentarioResponse> actualizar(@PathVariable Long id,
+        public ResponseEntity<ComentarioResponse> actualizar(
+            @PathVariable @Positive(message = "El id debe ser positivo") Long id,
             @Valid @RequestBody ComentarioRequest request) {
         Optional<ComentarioResponse> comentario = comentarioService.actualizar(id, request);
         return comentario.map(ResponseEntity::ok)
@@ -51,7 +55,8 @@ public class ComentarioController {
     }
 
     @DeleteMapping("/comentarios/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        public ResponseEntity<Void> eliminar(
+            @PathVariable @Positive(message = "El id debe ser positivo") Long id) {
         if (!comentarioService.eliminar(id)) {
             return ResponseEntity.notFound().build();
         }

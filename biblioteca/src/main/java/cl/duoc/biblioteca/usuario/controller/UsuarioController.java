@@ -19,6 +19,7 @@ import cl.duoc.biblioteca.usuario.dto.UsuarioRequest;
 import cl.duoc.biblioteca.usuario.dto.UsuarioResponse;
 import cl.duoc.biblioteca.usuario.service.UsuarioService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 
 @Validated
 @RestController
@@ -37,7 +38,7 @@ public class UsuarioController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UsuarioResponse> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<UsuarioResponse> buscarPorId(@PathVariable @Positive(message = "El id debe ser positivo") Long id) {
         Optional<UsuarioResponse> usuario = usuarioService.buscarPorId(id);
         return usuario.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
@@ -54,7 +55,7 @@ public class UsuarioController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UsuarioResponse> actualizar(@PathVariable Long id,
+    public ResponseEntity<UsuarioResponse> actualizar(@PathVariable @Positive(message = "El id debe ser positivo") Long id,
             @Valid @RequestBody UsuarioRequest request) {
         Optional<UsuarioResponse> usuario = usuarioService.actualizar(id, request);
         return usuario.map(ResponseEntity::ok)
@@ -62,7 +63,7 @@ public class UsuarioController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable @Positive(message = "El id debe ser positivo") Long id) {
         if (!usuarioService.eliminar(id)) {
             return ResponseEntity.notFound().build();
         }

@@ -9,6 +9,7 @@ import cl.duoc.biblioteca.foro.dto.CategoriaRequest;
 import cl.duoc.biblioteca.foro.dto.CategoriaResponse;
 import cl.duoc.biblioteca.foro.model.Categoria;
 import cl.duoc.biblioteca.foro.repository.CategoriaRepository;
+import cl.duoc.biblioteca.exception.ConflictException;
 
 @Service
 public class CategoriaService {
@@ -29,7 +30,7 @@ public class CategoriaService {
 
     public CategoriaResponse crear(CategoriaRequest request) {
         if (categoriaRepository.existsByNombreIgnoreCase(request.nombre())) {
-            throw new IllegalArgumentException("La categoría ya existe");
+            throw new ConflictException("La categoría ya existe");
         }
         Categoria categoria = new Categoria();
         categoria.setNombre(request.nombre());
@@ -38,6 +39,9 @@ public class CategoriaService {
     }
 
     public Optional<CategoriaResponse> actualizar(Long id, CategoriaRequest request) {
+        if (categoriaRepository.existsByNombreIgnoreCaseAndIdNot(request.nombre(), id)) {
+            throw new ConflictException("La categoría ya existe");
+        }
         return categoriaRepository.findById(id).map(categoria -> {
             categoria.setNombre(request.nombre());
             categoria.setDescripcion(request.descripcion());

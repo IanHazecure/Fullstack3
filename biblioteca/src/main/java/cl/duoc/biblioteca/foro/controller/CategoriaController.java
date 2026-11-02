@@ -19,6 +19,7 @@ import cl.duoc.biblioteca.foro.dto.CategoriaRequest;
 import cl.duoc.biblioteca.foro.dto.CategoriaResponse;
 import cl.duoc.biblioteca.foro.service.CategoriaService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 
 @Validated
 @RestController
@@ -37,7 +38,7 @@ public class CategoriaController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CategoriaResponse> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<CategoriaResponse> buscarPorId(@PathVariable @Positive(message = "El id debe ser positivo") Long id) {
         Optional<CategoriaResponse> categoria = categoriaService.buscarPorId(id);
         return categoria.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
@@ -49,7 +50,7 @@ public class CategoriaController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CategoriaResponse> actualizar(@PathVariable Long id,
+    public ResponseEntity<CategoriaResponse> actualizar(@PathVariable @Positive(message = "El id debe ser positivo") Long id,
             @Valid @RequestBody CategoriaRequest request) {
         Optional<CategoriaResponse> categoria = categoriaService.actualizar(id, request);
         return categoria.map(ResponseEntity::ok)
@@ -57,7 +58,7 @@ public class CategoriaController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable @Positive(message = "El id debe ser positivo") Long id) {
         if (!categoriaService.eliminar(id)) {
             return ResponseEntity.notFound().build();
         }

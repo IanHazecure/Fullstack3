@@ -20,6 +20,7 @@ import cl.duoc.biblioteca.foro.dto.TemaRequest;
 import cl.duoc.biblioteca.foro.dto.TemaResponse;
 import cl.duoc.biblioteca.foro.service.TemaService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 
 @Validated
 @RestController
@@ -39,7 +40,7 @@ public class TemaController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TemaResponse> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<TemaResponse> buscarPorId(@PathVariable @Positive(message = "El id debe ser positivo") Long id) {
         Optional<TemaResponse> tema = temaService.buscarPorId(id);
         return tema.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
@@ -51,14 +52,15 @@ public class TemaController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TemaResponse> actualizar(@PathVariable Long id, @Valid @RequestBody TemaRequest request) {
+        public ResponseEntity<TemaResponse> actualizar(@PathVariable @Positive(message = "El id debe ser positivo") Long id,
+            @Valid @RequestBody TemaRequest request) {
         Optional<TemaResponse> tema = temaService.actualizar(id, request);
         return tema.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable @Positive(message = "El id debe ser positivo") Long id) {
         if (!temaService.eliminar(id)) {
             return ResponseEntity.notFound().build();
         }

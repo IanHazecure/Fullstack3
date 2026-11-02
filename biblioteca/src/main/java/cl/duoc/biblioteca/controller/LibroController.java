@@ -13,10 +13,14 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
 
 import cl.duoc.biblioteca.model.Libro;
 import cl.duoc.biblioteca.service.LibroService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 
+@Validated
 @RestController
 @RequestMapping("/api/libros")
 public class LibroController {
@@ -33,26 +37,27 @@ public class LibroController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Libro> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<Libro> buscarPorId(@PathVariable @Positive(message = "El id debe ser positivo") Long id) {
         Optional<Libro> libro = libroService.buscarPorId(id);
         return libro.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public ResponseEntity<Libro> crear(@RequestBody Libro datos) {
+    public ResponseEntity<Libro> crear(@Valid @RequestBody Libro datos) {
         return ResponseEntity.status(HttpStatus.CREATED).body(libroService.crear(datos));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Libro> actualizar(@PathVariable Long id, @RequestBody Libro datos) {
+        public ResponseEntity<Libro> actualizar(@PathVariable @Positive(message = "El id debe ser positivo") Long id,
+            @Valid @RequestBody Libro datos) {
         Optional<Libro> libro = libroService.actualizar(id, datos);
         return libro.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable @Positive(message = "El id debe ser positivo") Long id) {
         if (!libroService.eliminar(id)) {
             return ResponseEntity.notFound().build();
         }

@@ -37,7 +37,7 @@ public class CategoriaService {
         categoria.setDescripcion(request.descripcion());
         return toResponse(categoriaRepository.save(categoria));
     }
-
+//validacion 
     public Optional<CategoriaResponse> actualizar(Long id, CategoriaRequest request) {
         if (categoriaRepository.existsByNombreIgnoreCaseAndIdNot(request.nombre(), id)) {
             throw new ConflictException("La categoría ya existe");

@@ -18,6 +18,8 @@ public class Libro {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+//validaciones mensajes 
+
 
     @NotBlank(message = "El título es obligatorio")
     @Size(max = 150, message = "El título no puede superar 150 caracteres")
@@ -37,6 +39,7 @@ public class Libro {
     @NotBlank(message = "El género es obligatorio")
     @Size(max = 80, message = "El género no puede superar 80 caracteres")
     @Column(nullable = false, length = 80)
+    ////
     private String genero;
 
     public Libro() {

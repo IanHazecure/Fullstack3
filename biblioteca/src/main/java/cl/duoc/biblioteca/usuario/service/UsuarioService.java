@@ -3,7 +3,7 @@ package cl.duoc.biblioteca.usuario.service;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import cl.duoc.biblioteca.usuario.dto.UsuarioRequest;
@@ -16,10 +16,11 @@ import cl.duoc.biblioteca.usuario.repository.UsuarioRepository;
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder;
 
-    public UsuarioService(UsuarioRepository usuarioRepository) {
+    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public List<UsuarioResponse> listar() {
@@ -31,6 +32,14 @@ public class UsuarioService {
     }
 
     public UsuarioResponse crear(UsuarioRequest request) {
+        return crear(request, false);
+    }
+
+    public UsuarioResponse crearAdmin(UsuarioRequest request) {
+        return crear(request, true);
+    }
+
+    private UsuarioResponse crear(UsuarioRequest request, boolean permitirRol) {
         if (usuarioRepository.existsByEmail(request.email())) {
             throw new IllegalArgumentException("El email ya está registrado");
         }
@@ -38,7 +47,7 @@ public class UsuarioService {
         usuario.setNombre(request.nombre());
         usuario.setEmail(request.email());
         usuario.setPasswordHash(passwordEncoder.encode(request.password()));
-        usuario.setRol(request.rol() == null ? Rol.USER : request.rol());
+        usuario.setRol(permitirRol && request.rol() != null ? request.rol() : Rol.USER);
         return toResponse(usuarioRepository.save(usuario));
     }
 

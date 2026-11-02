@@ -48,6 +48,11 @@ public class UsuarioController {
         return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.crear(request));
     }
 
+    @PostMapping("/admin")
+    public ResponseEntity<UsuarioResponse> crearAdmin(@Valid @RequestBody UsuarioRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.crearAdmin(request));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<UsuarioResponse> actualizar(@PathVariable Long id,
             @Valid @RequestBody UsuarioRequest request) {

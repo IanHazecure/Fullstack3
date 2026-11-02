@@ -45,9 +45,10 @@ public class TemaService {
         return temaRepository.findById(id).map(this::toResponse);
     }
 
-    public TemaResponse crear(TemaRequest request) {
+    public TemaResponse crear(TemaRequest request, String email) {
         Tema tema = new Tema();
         aplicarDatos(tema, request);
+        tema.setAutor(buscarAutor(email));
         tema.setFechaCreacion(LocalDateTime.now());
         return toResponse(temaRepository.save(tema));
     }
@@ -70,12 +71,14 @@ public class TemaService {
     private void aplicarDatos(Tema tema, TemaRequest request) {
         Categoria categoria = categoriaRepository.findById(request.categoriaId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoría no encontrada"));
-        Usuario autor = usuarioRepository.findById(request.autorId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Autor no encontrado"));
         tema.setTitulo(request.titulo());
         tema.setContenido(request.contenido());
         tema.setCategoria(categoria);
-        tema.setAutor(autor);
+        }
+
+        private Usuario buscarAutor(String email) {
+        return usuarioRepository.findByEmail(email)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Autor no encontrado"));
     }
 
     private TemaResponse toResponse(Tema tema) {

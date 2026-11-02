@@ -52,10 +52,7 @@ public class ComentarioService {
 
     public Optional<ComentarioResponse> actualizar(Long id, ComentarioRequest request) {
         return comentarioRepository.findById(id).map(comentario -> {
-            Usuario autor = usuarioRepository.findById(request.autorId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Autor no encontrado"));
             comentario.setContenido(request.contenido());
-            comentario.setAutor(autor);
             return toResponse(comentarioRepository.save(comentario));
         });
     }

@@ -37,10 +37,10 @@ public class ComentarioService {
                 .map(this::toResponse).toList();
     }
 
-    public ComentarioResponse crear(Long temaId, ComentarioRequest request) {
+    public ComentarioResponse crear(Long temaId, ComentarioRequest request, String email) {
         Tema tema = temaRepository.findById(temaId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tema no encontrado"));
-        Usuario autor = usuarioRepository.findById(request.autorId())
+        Usuario autor = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Autor no encontrado"));
         Comentario comentario = new Comentario();
         comentario.setContenido(request.contenido());

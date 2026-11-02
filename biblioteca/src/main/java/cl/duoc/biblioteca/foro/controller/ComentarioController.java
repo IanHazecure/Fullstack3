@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,8 +42,9 @@ public class ComentarioController {
     @PostMapping("/temas/{temaId}/comentarios")
         public ResponseEntity<ComentarioResponse> crear(
             @PathVariable @Positive(message = "El id del tema debe ser positivo") Long temaId,
-            @Valid @RequestBody ComentarioRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(comentarioService.crear(temaId, request));
+            @Valid @RequestBody ComentarioRequest request, Authentication authentication) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(comentarioService.crear(temaId, request, authentication.getName()));
     }
 
     @PutMapping("/comentarios/{id}")

@@ -1,0 +1,7 @@
+cl\duoc\libros\model\Libro.class
+cl\duoc\libros\controller\LibroController.class
+cl\duoc\libros\service\LibroService.class
+cl\duoc\libros\LibrosApplication.class
+cl\duoc\libros\factory\LibroFactory.class
+cl\duoc\libros\model\Libro$LibroBuilder.class
+cl\duoc\libros\repository\LibroRepository.class

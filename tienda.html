@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Compra de libros</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 0 10px; }
+    h1 { font-size: 22px; }
+    .libro { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+    .libro h3 { margin: 0 0 5px; font-size: 16px; }
+    .libro p { margin: 0 0 8px; color: #444; }
+    button { padding: 5px 10px; cursor: pointer; }
+    #mensaje { font-weight: bold; min-height: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Libros disponibles</h1>
+  <p id="mensaje"></p>
+
+  <div class="libro">
+    <h3>Clean Code</h3>
+    <p>Robert C. Martin - $29.990</p>
+    <button onclick="comprar('Clean Code')">Comprar</button>
+  </div>
+
+  <div class="libro">
+    <h3>Java: The Complete Reference</h3>
+    <p>Herbert Schildt - $39.990</p>
+    <button onclick="comprar('Java: The Complete Reference')">Comprar</button>
+  </div>
+
+  <div class="libro">
+    <h3>Cien años de soledad</h3>
+    <p>Gabriel García Márquez - $12.990</p>
+    <button onclick="comprar('Cien años de soledad')">Comprar</button>
+  </div>
+
+  <div class="libro">
+    <h3>El principito</h3>
+    <p>Antoine de Saint-Exupéry - $8.990</p>
+    <button onclick="comprar('El principito')">Comprar</button>
+  </div>
+
+  <script>
+    function comprar(titulo) {
+      document.getElementById('mensaje').textContent = 'Compra simulada: ' + titulo;
+    }
+  </script>
+</body>
+</html>

@@ -3,49 +3,106 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Compra de libros</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 0 10px; }
-    h1 { font-size: 22px; }
-    .libro { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
-    .libro h3 { margin: 0 0 5px; font-size: 16px; }
-    .libro p { margin: 0 0 8px; color: #444; }
-    button { padding: 5px 10px; cursor: pointer; }
-    #mensaje { font-weight: bold; min-height: 20px; }
-  </style>
+  <title>Librería | Libros disponibles</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Libros disponibles</h1>
-  <p id="mensaje"></p>
+  <header>
+    <h1>Libros disponibles</h1>
+    <p>Elige tu próxima lectura entre los títulos de nuestro catálogo.</p>
+  </header>
 
-  <div class="libro">
-    <h3>Clean Code</h3>
-    <p>Robert C. Martin - $29.990</p>
-    <button onclick="comprar('Clean Code')">Comprar</button>
-  </div>
-
-  <div class="libro">
-    <h3>Java: The Complete Reference</h3>
-    <p>Herbert Schildt - $39.990</p>
-    <button onclick="comprar('Java: The Complete Reference')">Comprar</button>
-  </div>
-
-  <div class="libro">
-    <h3>Cien años de soledad</h3>
-    <p>Gabriel García Márquez - $12.990</p>
-    <button onclick="comprar('Cien años de soledad')">Comprar</button>
-  </div>
-
-  <div class="libro">
-    <h3>El principito</h3>
-    <p>Antoine de Saint-Exupéry - $8.990</p>
-    <button onclick="comprar('El principito')">Comprar</button>
-  </div>
+  <main>
+    <p id="mensaje" role="status" aria-live="polite">Cargando libros...</p>
+    <div id="libros"></div>
+  </main>
 
   <script>
-    function comprar(titulo) {
-      document.getElementById('mensaje').textContent = 'Compra simulada: ' + titulo;
+    // Ruta relativa: funciona igual en local y en Vercel (misma URL del sitio).
+    const API_URL = '/api/libros';
+
+    const COLORES = ['#23423a', '#3b3f5c', '#6b2f3a', '#4a3b2a', '#2f4858', '#5a4a6b'];
+
+    function colorPara(texto) {
+      let h = 0;
+      for (let i = 0; i < texto.length; i++) h = (h * 31 + texto.charCodeAt(i)) >>> 0;
+      return COLORES[h % COLORES.length];
     }
+
+    function comprar(titulo, boton) {
+      document.getElementById('mensaje').textContent = 'Compra simulada: ' + titulo;
+      boton.textContent = 'Comprado';
+      boton.disabled = true;
+    }
+
+    function crearTarjeta(libro) {
+      const tarjeta = document.createElement('article');
+      tarjeta.className = 'libro';
+
+      const portada = document.createElement('div');
+      portada.className = 'portada';
+      portada.style.backgroundColor = colorPara(libro.titulo || '');
+
+      const titulo = document.createElement('h2');
+      titulo.textContent = libro.titulo;
+      portada.appendChild(titulo);
+
+      const autor = document.createElement('p');
+      autor.className = 'autor';
+      autor.textContent = libro.autor || '';
+      portada.appendChild(autor);
+
+      const detalle = document.createElement('p');
+      detalle.className = 'detalle';
+      detalle.textContent = [libro.anioPublicacion, libro.genero]
+        .filter(function (v) { return v !== null && v !== undefined && v !== ''; })
+        .join(', ');
+
+      const boton = document.createElement('button');
+      boton.type = 'button';
+      boton.textContent = 'Comprar';
+      boton.setAttribute('aria-label', 'Comprar ' + libro.titulo);
+      boton.addEventListener('click', function () { comprar(libro.titulo, boton); });
+
+      tarjeta.append(portada, detalle, boton);
+      return tarjeta;
+    }
+
+    async function cargarLibros() {
+      const contenedor = document.getElementById('libros');
+      const mensaje = document.getElementById('mensaje');
+      mensaje.className = '';
+      mensaje.textContent = 'Cargando libros...';
+
+      try {
+        const respuesta = await fetch(API_URL);
+        if (!respuesta.ok) throw new Error('HTTP ' + respuesta.status);
+
+        const libros = await respuesta.json();
+        contenedor.textContent = '';
+        mensaje.textContent = '';
+
+        if (libros.length === 0) {
+          mensaje.textContent = 'Aún no hay libros en el catálogo.';
+          return;
+        }
+        libros.forEach(function (libro) { contenedor.appendChild(crearTarjeta(libro)); });
+      } catch (error) {
+        console.error(error);
+        mensaje.className = 'error';
+        mensaje.textContent = 'No se pudieron cargar los libros.';
+        const reintentar = document.createElement('button');
+        reintentar.type = 'button';
+        reintentar.textContent = 'Reintentar';
+        reintentar.addEventListener('click', cargarLibros);
+        mensaje.appendChild(reintentar);
+      }
+    }
+
+    cargarLibros();
   </script>
 </body>
 </html>

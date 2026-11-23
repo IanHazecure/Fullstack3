@@ -1,0 +1,14 @@
+services:
+  editorial-service:
+    build: .
+    container_name: editorial-service
+    ports:
+      - "8081:8081"
+    environment:
+      DB_URL: jdbc:oracle:thin:@fullstack3_high
+      DB_USERNAME: ADMIN
+      DB_PASSWORD: ${DB_PASSWORD}
+      TNS_ADMIN: /wallet
+      JWT_SECRET: ${JWT_SECRET:-local-development-secret-change-before-deployment-2026}
+    volumes:
+      - ${WALLET_PATH:-C:/Users/Felipe/Desktop/wallet_fullstack3}:/wallet:ro

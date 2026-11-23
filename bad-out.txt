@@ -1,0 +1,1 @@
+{"timestamp":"2026-11-23T00:42:51.044273800Z","status":401,"error":"Unauthorized","message":"Credenciales inválidas","path":"/api/auth/login","fieldErrors":{}}

@@ -10,21 +10,87 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <nav class="topbar" aria-label="Principal">
+    <a class="marca" href="/">Librería</a>
+
+    <div id="sesion-invitado" class="sesion">
+      <button type="button" class="btn-sec" id="abrir-login">Iniciar sesión</button>
+      <button type="button" id="abrir-registro">Registrarse</button>
+    </div>
+
+    <div id="sesion-usuario" class="sesion" hidden>
+      <span class="saludo">Hola, <strong id="usuario-nombre"></strong><span id="usuario-rol" class="rol"></span></span>
+      <button type="button" class="btn-sec" id="logout">Cerrar sesión</button>
+    </div>
+  </nav>
+
   <header>
     <h1>Libros disponibles</h1>
     <p>Elige tu próxima lectura entre los títulos de nuestro catálogo.</p>
   </header>
 
   <main>
+    <section id="admin-panel" class="panel" hidden>
+      <h2>Agregar libro</h2>
+      <form id="libro-form">
+        <input id="titulo" placeholder="Título" required>
+        <input id="autor" placeholder="Autor" required>
+        <input id="anio" type="number" placeholder="Año" min="0" required>
+        <input id="genero" placeholder="Género" required>
+        <button type="submit">Agregar</button>
+      </form>
+      <p id="libro-mensaje"></p>
+    </section>
+
     <p id="mensaje" role="status" aria-live="polite">Cargando libros...</p>
     <div id="libros"></div>
   </main>
 
+  <dialog id="auth-dialog" aria-labelledby="auth-titulo">
+    <div class="dialog-cuerpo">
+      <button type="button" class="cerrar" id="auth-cerrar" aria-label="Cerrar">&times;</button>
+      <h2 id="auth-titulo">Iniciar sesión</h2>
+
+      <form id="login-form" class="campos">
+        <input type="email" id="email" placeholder="Email" autocomplete="username" required>
+        <input type="password" id="password" placeholder="Contraseña" autocomplete="current-password" required>
+        <button type="submit">Entrar</button>
+        <p id="login-mensaje" class="aviso" role="alert"></p>
+      </form>
+
+      <form id="registro-form" class="campos" hidden>
+        <input type="text" id="reg-nombre" placeholder="Nombre" autocomplete="name" required>
+        <input type="email" id="reg-email" placeholder="Email" autocomplete="email" required>
+        <input type="password" id="reg-password" placeholder="Contraseña (mínimo 8 caracteres)" autocomplete="new-password" minlength="8" required>
+        <input type="password" id="reg-password2" placeholder="Repite la contraseña" autocomplete="new-password" minlength="8" required>
+        <button type="submit">Crear cuenta</button>
+        <p id="registro-mensaje" class="aviso" role="alert"></p>
+      </form>
+
+      <p class="cambio">
+        <span id="cambio-texto">¿No tienes cuenta?</span>
+        <button type="button" class="enlace" id="cambio-boton">Regístrate</button>
+      </p>
+    </div>
+  </dialog>
+
   <script>
-    // Ruta relativa: funciona igual en local y en Vercel (misma URL del sitio).
     const API_URL = '/api/libros';
+    const AUTH_URL = '/api/auth/login';
+    const REGISTRO_URL = '/api/auth/register';
+
+    let token = localStorage.getItem('token');
+    let usuario = null;
+    try {
+      usuario = JSON.parse(localStorage.getItem('usuario'));
+    } catch (error) {
+      usuario = null;
+    }
 
     const COLORES = ['#23423a', '#3b3f5c', '#6b2f3a', '#4a3b2a', '#2f4858', '#5a4a6b'];
+
+    const dialogo = document.getElementById('auth-dialog');
+    let modoAuth = 'login';
 
     function colorPara(texto) {
       let h = 0;
@@ -102,6 +168,176 @@
       }
     }
 
+    function actualizarSesion() {
+      const invitado = document.getElementById('sesion-invitado');
+      const panelUsuario = document.getElementById('sesion-usuario');
+      const panelAdmin = document.getElementById('admin-panel');
+
+      if (token && usuario) {
+        invitado.hidden = true;
+        panelUsuario.hidden = false;
+        document.getElementById('usuario-nombre').textContent = usuario.nombre;
+        document.getElementById('usuario-rol').textContent = usuario.rol;
+        panelAdmin.hidden = usuario.rol !== 'ADMIN';
+      } else {
+        invitado.hidden = false;
+        panelUsuario.hidden = true;
+        panelAdmin.hidden = true;
+        token = null;
+        usuario = null;
+        localStorage.removeItem('token');
+        localStorage.removeItem('usuario');
+      }
+    }
+
+    /* ---------- Diálogo de acceso ---------- */
+
+    function mostrarModo(modo) {
+      modoAuth = modo;
+      const esLogin = modo === 'login';
+      document.getElementById('login-form').hidden = !esLogin;
+      document.getElementById('registro-form').hidden = esLogin;
+      document.getElementById('auth-titulo').textContent = esLogin ? 'Iniciar sesión' : 'Crear cuenta';
+      document.getElementById('cambio-texto').textContent = esLogin ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?';
+      document.getElementById('cambio-boton').textContent = esLogin ? 'Regístrate' : 'Inicia sesión';
+    }
+
+    function mostrarAviso(id, texto, esError) {
+      const el = document.getElementById(id);
+      el.textContent = texto;
+      el.className = 'aviso' + (esError ? ' error' : ' ok');
+    }
+
+    function abrirAuth(modo) {
+      mostrarModo(modo);
+      mostrarAviso('login-mensaje', '', false);
+      mostrarAviso('registro-mensaje', '', false);
+      if (!dialogo.open) dialogo.showModal();
+    }
+
+    function guardarSesion(data) {
+      token = data.token;
+      usuario = data.usuario;
+      localStorage.setItem('token', token);
+      localStorage.setItem('usuario', JSON.stringify(usuario));
+      actualizarSesion();
+      cargarLibros();
+      dialogo.close();
+    }
+
+    async function leerError(respuesta, porDefecto) {
+      const error = await respuesta.json().catch(function () { return {}; });
+      return error.message || porDefecto;
+    }
+
+    async function iniciarSesion(event) {
+      event.preventDefault();
+      mostrarAviso('login-mensaje', '', false);
+
+      try {
+        const respuesta = await fetch(AUTH_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value
+          })
+        });
+        if (!respuesta.ok) throw new Error(await leerError(respuesta, 'Credenciales inválidas'));
+
+        guardarSesion(await respuesta.json());
+        document.getElementById('login-form').reset();
+      } catch (error) {
+        mostrarAviso('login-mensaje', error.message, true);
+      }
+    }
+
+    async function registrarse(event) {
+      event.preventDefault();
+      mostrarAviso('registro-mensaje', '', false);
+
+      const password = document.getElementById('reg-password').value;
+      if (password !== document.getElementById('reg-password2').value) {
+        mostrarAviso('registro-mensaje', 'Las contraseñas no coinciden.', true);
+        return;
+      }
+
+      try {
+        const respuesta = await fetch(REGISTRO_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nombre: document.getElementById('reg-nombre').value.trim(),
+            email: document.getElementById('reg-email').value.trim(),
+            password: password
+          })
+        });
+        if (!respuesta.ok) throw new Error(await leerError(respuesta, 'No se pudo crear la cuenta'));
+
+        const data = await respuesta.json().catch(function () { return {}; });
+        document.getElementById('registro-form').reset();
+
+        if (data.token && data.usuario) {
+          guardarSesion(data);
+        } else {
+          mostrarModo('login');
+          mostrarAviso('login-mensaje', 'Cuenta creada. Ya puedes iniciar sesión.', false);
+        }
+      } catch (error) {
+        mostrarAviso('registro-mensaje', error.message, true);
+      }
+    }
+
+    function cerrarSesion() {
+      token = null;
+      usuario = null;
+      actualizarSesion();
+      cargarLibros();
+    }
+
+    async function crearLibro(event) {
+      event.preventDefault();
+      const mensaje = document.getElementById('libro-mensaje');
+      const libro = {
+        titulo: document.getElementById('titulo').value,
+        autor: document.getElementById('autor').value,
+        anioPublicacion: parseInt(document.getElementById('anio').value, 10),
+        genero: document.getElementById('genero').value
+      };
+
+      try {
+        const respuesta = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify(libro)
+        });
+        if (!respuesta.ok) throw new Error(await leerError(respuesta, 'No se pudo agregar el libro'));
+
+        document.getElementById('libro-form').reset();
+        mensaje.textContent = 'Libro agregado.';
+        cargarLibros();
+      } catch (error) {
+        mensaje.textContent = error.message;
+      }
+    }
+
+    document.getElementById('abrir-login').addEventListener('click', function () { abrirAuth('login'); });
+    document.getElementById('abrir-registro').addEventListener('click', function () { abrirAuth('registro'); });
+    document.getElementById('cambio-boton').addEventListener('click', function () {
+      abrirAuth(modoAuth === 'login' ? 'registro' : 'login');
+    });
+    document.getElementById('auth-cerrar').addEventListener('click', function () { dialogo.close(); });
+    dialogo.addEventListener('click', function (e) { if (e.target === dialogo) dialogo.close(); });
+
+    document.getElementById('login-form').addEventListener('submit', iniciarSesion);
+    document.getElementById('registro-form').addEventListener('submit', registrarse);
+    document.getElementById('libro-form').addEventListener('submit', crearLibro);
+    document.getElementById('logout').addEventListener('click', cerrarSesion);
+
+    actualizarSesion();
     cargarLibros();
   </script>
 </body>
